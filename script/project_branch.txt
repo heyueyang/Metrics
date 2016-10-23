@@ -1,0 +1,10 @@
+struts	1	master
+lucene	7	lucene_3_0_exposed
+jEdit	1	auto-indent-fix
+camel	1	master
+itextpdf	1	develop
+voldemort	75	master
+tomcat	1	trunk
+liferay	1	master
+eclipse	1	master
+ant	1	master

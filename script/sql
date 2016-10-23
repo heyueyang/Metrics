@@ -1,0 +1,19 @@
+//1
+select tags.id,tags.name,scmlog.id,commit_date from tags inner join tag_revisions on tags.id = tag_revisions.tag_id inner join scmlog on tag_revisions.commit_id = scmlog.id where scmlog.id in (select commit_id from actions where branch_id = 1) ;
+//2
+select tags.id,tags.name,b.commit_id,commit_date from tags inner join tag_revisions on tags.id = tag_revisions.tag_id inner join scmlog on tag_revisions.commit_id = scmlog.id inner join (select distinct(commit_id) from actions)b on scmlog.id = b.commit_id;
+
+//3
+select actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,max(scmlog.commit_date)  from actions inner join scmlog on scmlog.id=actions.commit_id  where actions.commit_id<=3691  and actions.type<>'R' and actions.type<>'C' and actions.type<>'V' and actions.type<>'D'  and RIGHT(actions.current_file_path,4)='java'  and actions.branch_id=1  group by actions.file_id
+
+
+select * from actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,scmlog.commit_date from actions inner join scmlog on scmlog.id=actions.commit_id      ,(select actions.file_id,max(scmlog.commit_date) from actions inner join scmlog on scmlog.id=actions.commit_id) a,   where scmlog.commit_date=a.commit_date and actions.commit_id<=3691 and RIGHT(actions.current_file_path,4)='java' and actions.branch_id=1 group by actions.file_id order by scmlog.commit_date;
+
+//4
+select branch_id,count(*) from actions group by branch_id;
+
+
+java/org/apache/tomcat/util/bcel/classfile/SourceFile.java
+
+//5
+select tags.id,tags.name,b.commit_id,commit_date,b.branch_id from tags inner join tag_revisions on tags.id = tag_revisions.tag_id inner join scmlog on tag_revisions.commit_id = scmlog.id inner join (select commit_id,max(branch_id) branch_id from actions group by commit_id)b on scmlog.id = b.commit_id;
