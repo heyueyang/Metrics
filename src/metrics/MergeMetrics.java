@@ -19,9 +19,9 @@ public class MergeMetrics {
 	static String project = "";
 	static String resultDir = "/home/yueyang/data/final_metrics/";
 	static String complexDir = "/home/yueyang/data/comlexity_csv/";
-	static String networkDir = "/home/yueyang/data/network/";
+	static String networkDir = "/home/yueyang/data/network_csv/";
 	static String bowDir = "/home/yueyang/data/bow_new/";
-	static String sourceCodeDir = "/home/yueyang/projects/recover_new/";
+	static String sourceCodeDir = "/home/yueyang/recover_projects/";
 	static String recoverDir = "/home/yueyang/data/info_new/";
 	Map<List<String>, StringBuffer> content;
 	static Map<List<Integer>, String> label;
@@ -49,12 +49,12 @@ public class MergeMetrics {
 		//MergeMetrics mer = new MergeMetrics("eclipse");
 		//mer.excute();
 	}
-	public void excute() throws Exception {
+	public void excute() throws Exception {		
 		
-		String resultPath = resultDir + project + ".csv";
-		String complexPath = complexDir + project + "Metrics.csv" ;
-		String networkPath = networkDir + project + "/Joined.csv";
+		String complexPath = complexDir + project + "Com.csv" ;
+		String networkPath = networkDir + project + "Net.csv";
 		String bowPath = bowDir + project + "Bow.csv";
+		String resultPath = resultDir + project + ".csv";
 		String projectHome = sourceCodeDir + project + "AllFiles/";
 		
 		
@@ -66,7 +66,8 @@ public class MergeMetrics {
 
 			Map<List<Integer>, String> network = readNetwork(networkPath);
 			
-			Map<List<Integer>, StringBuffer> bow = readBowContent(projectHome);
+			//Map<List<Integer>, StringBuffer> bow = readBowContent(projectHome);
+			Map<List<Integer>, StringBuffer> bow = null;
 			merge(resultPath, complex, network, bow);
 		}
 	}
@@ -107,9 +108,15 @@ public class MergeMetrics {
 			}else{
 				sBuffer.append(netNullString);
 			}*/
-			sBuffer.append(network.get(list) + ",");
 			
-			sBuffer.append(bow.get(list) + ",");
+			if(network.get(list) != null){
+				sBuffer.append(network.get(list) + ",");
+				//System.out.println(network.get(list));
+			}else{
+				sBuffer.append(netNullString);
+			}
+			
+			//sBuffer.append(bow.get(list) + ",");
 			sBuffer.append(label.get(list) + "\n");
 			System.out.println(cnt++);
 			
@@ -133,7 +140,7 @@ public class MergeMetrics {
 		System.out.println("complexity path:" + path);
 		Map<List<Integer>, String> complex = new HashMap<List<Integer>, String>();
 		BufferedReader bReader = null;
-		
+		Map<String,List<Integer>> Path2ICF = getPath2ICFfromTxt(recoverDir + project + "Recover.txt");
 		try {
 			
 			bReader = new BufferedReader(new FileReader(path));
@@ -204,7 +211,7 @@ public class MergeMetrics {
 			String[] record = line.split(",");
 			//���network����Ԫcsv�ļ��ĵ�һ���ֶΣ��õ�commit_id��file_id��changeloc
 			//String fileName = record[0].substring(record[0].lastIndexOf("\\") + 1,record[0].lastIndexOf("."));
-			String filePath = record[0].substring(record[0].lastIndexOf(project) + project.length() + 1,record[0].lastIndexOf("."));
+			String filePath = record[0].substring(record[0].lastIndexOf(project) + project.length() + 1);
 			//String[] fileId_commitIdArray = fileName.split("_");
 			
 			/*List<Integer> ID_commitId_fileId = new ArrayList<Integer>();

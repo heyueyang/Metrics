@@ -8,8 +8,14 @@ do
 #################################################
 ############Caculate the Threshold###############
 #################################################
-	infoPath="/home/yueyang/data/info_new/"$file"Recover.txt"
-	tempPath="/home/yueyang/data/files/"$file"Recover.txt"
+	infoPath="/home/yueyang/data/recover_info/"$file"Recover.txt"
+	tempDir="/home/yueyang/data/temp_recover_info/"
+	tempPath="/home/yueyang/data/temp_recover_info/"$file"Recover.txt"
+
+	if test ! -e $tempDir;then
+    		mkdir $tempDir
+	fi
+	
 	sort -k5n $infoPath>$tempPath
 	cutinfo=$(cat $tempPath | awk -F"\t" '{print $5}')
 	#echo $cutinfo

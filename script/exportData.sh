@@ -3,12 +3,13 @@
 ################### Input data into database ###############################
 ###########################################################################
 project=$1
-input_file=$1".csv" 
-result_file=$1"Metrics.csv"
+input_file=$1"Com.csv" 
+result_dir="/home/yueyang/data/complexity_csv/"
+result_file=$1".csv"
 thres=$2
 
 sudo mysql -h localhost -uroot -p111111 -D $project< /home/yueyang/data/inputMetrics.sql
-sudo mysql --local-infile -uroot -p111111 $project -e "LOAD DATA LOCAL INFILE '/home/yueyang/data/under_metrics1/"$input_file"' INTO TABLE complexity_info_temp FIELDS TERMINATED BY ','  IGNORE 1 LINES"
+sudo mysql --local-infile -uroot -p111111 $project -e "LOAD DATA LOCAL INFILE '/home/yueyang/data/understand_metrics/"$input_file"' INTO TABLE complexity_info_temp FIELDS TERMINATED BY ','  IGNORE 1 LINES"
 
 sudo mysql --local-infile -uroot -p111111 $project -e "insert into complexity_info select substring_index(Name,'\"',-2),substring_index(Name,'_',-2),substring_index(Name,'_',-1),AvgCyclomatic,AvgCyclomaticModified,AvgCyclomaticStrict,AvgEssential,AvgLine,AvgLineBlank,AvgLineCode,AvgLineComment,CountDeclClass,
 CountDeclClassMethod,CountDeclClassVariable,CountDeclFunction,CountDeclInstanceMethod,CountDeclInstanceVariable,CountDeclMethod,CountDeclMethodDefault,
@@ -33,7 +34,10 @@ SumCyclomaticModified,SumCyclomaticStrict,SumEssential,substring_index(Name3,'.'
 ###########################################################################
 ################### Convert result file to CSV and save ###################
 ###########################################################################
-sudo mysql -uroot -p111111 $project -e "SELECT * FROM metrics_info">/home/yueyang/data/com/$result_file 
+if test ! -e $result_dir;then
+    	mkdir $result_dir
+fi
+sudo mysql -uroot -p111111 $project -e "SELECT * FROM metrics_info">$result_dir$result_file 
 
 sed -i 's/\t/,/g' /home/yueyang/data/complexity_csv/$result_file
 

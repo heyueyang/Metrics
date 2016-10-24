@@ -27,6 +27,5 @@ do
 if test -e $current_file_path;then
    cp $current_file_path $recoverPath$file_id"_"$commit_id"_"$changeloc".java"
 fi
-chmod 777 -R $recoverPath
 done
 
