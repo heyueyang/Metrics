@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Map;
 
 /**
- * �ʴ��࣬���ڽ�һЩԴ����ϢתΪ����������ʽ��Ŀǰת���������ֵ������û���ǡ�
- * ��Դ�밴����ע�������Ƿ�ע����һ���Ľ�������֡������Ƕ���ע���������ݣ�ע���еĴ���*��
- * ���ܵ��������ġ�
+ * 词袋类，用于将一些源码信息转为词向量的形式，目前转义符后跟数字的情况还没考虑。
+ * 将源码按照是注释区还是非注释区一块块的解析，拆分。例如是对于注释区的内容，注释中的大量*是
+ * 不能当做除法的。
  * @author niu
  *
  */
@@ -19,8 +19,8 @@ public class Bow {
 	String[] dictory2 = { "!=", "==", "++", "--", "||", "&&", "<=", ">=" };
 	String[] dictory1 = { "=", "+", "-", "*", "/", "%", "!", "?" };
 	String[] dictory3 = { "=", "!=", "+", "*", "-", "||", "/", "&", "%", "!",
-			"?", ">=", "<=", "<", ">" }; // ȥ��ע���л����ַ����е�������š�
-
+			"?", ">=", "<=", "<", ">" }; // 去除注释中或者字符串中的特殊符号。
+	
 public static void main(String[] args) throws Exception {
 
 		String test_path = "/home/yueyang/data/error/5329_3233_12_error.txt";
@@ -78,13 +78,13 @@ public static void main(String[] args) throws Exception {
 	}
 
 	/**
-	 * ��ȡ�ӵ�ǰλ�ÿ�ʼtext��һ�γ���ע�ͻ����ַ����ĵط���
+	 * 获取从当前位置开始text第一次出现注释或者字符串的地方。
 	 * 
 	 * @param text
-	 *            Դ������
+	 *            源码内容
 	 * @param start
-	 *            ��ǰ����λ��
-	 * @return ��һ�γ���ע�ͻ����ַ����ĵط�
+	 *            当前索引位置
+	 * @return 下一次出现注释或者字符串的地方
 	 */
 	public int getIndex(StringBuffer text, int start) {
 		while (start < text.length()) {
@@ -119,44 +119,45 @@ public static void main(String[] args) throws Exception {
 		return start;
 	}
 
+
 	/**
-	 * �����ӵĴ���ע�͵�Դ���ļ�תΪ�ʴ���ʽ��
+	 * 将复杂的带有注释的源码文件转为词袋形式。
 	 * 
 	 * @param text
-	 *            Դ������
-	 * @return ת����Ĵʴ�
+	 *            源码内容
+	 * @return 转换后的词袋
 	 */
 	public Map<String, Integer> bowP(StringBuffer text) {
 		StringBuffer hunkBuffer = new StringBuffer();
 		bag = new HashMap<String, Integer>();
 		int i = 1;
-		while (text.toString().length() > 0) {// ��Դ��������ֱ�Ӽ���hunkBuffer����ע�������ݴ�������hunkBuffer��
+		while (text.toString().length() > 0) {// 将源码区内容直接加入hunkBuffer，将注释区内容处理后加入hunkBuffer。
 			int start = 0;
 			start = getIndex(text, start);
-			if (start==text.length()) {   //���startֱ���ҵ����ļ�ĩβ����˵������û��ע������
+			if (start==text.length()) {   //如果start直接找到了文件末尾，则说明上面没有注释区。
 				hunkBuffer.append(" " + text.substring(0, start));
 				break;
 			}
-			while (text.charAt(start) == '"') { // ����ҵ��ĵ�һ��ע�����ַ�Ϊ���������ǰ����\��ô�Ͳ���������ע�����Ŀ�ʼ��
-				if (start > 0 && text.charAt(start - 1) == '\\') { // ����һ���ַ��������Ŀ�ʼ���߽�����
+			while (text.charAt(start) == '"') { // 如果找到的第一个注释类字符为“，如果其前面由\那么就不是真正的注释区的开始。
+				if (start > 0 && text.charAt(start - 1) == '\\') {  // 不是一个字符串真正的开始或者结束。
 					start++;
 					start = getIndex(text, start);
 				} else {
 					break;
 				}
 			}
-			// ִ�е��˴�Ҫô�����ĵ�ĩβ��Ҫô��Ȼ�ҵ���ע�����Ŀ�ʼ��
-			if (start == text.length() - 1) { // �����ĵ������������һ���ַ�����ô��ֱ���˳���
+			// 执行到此处要么到了文档末尾，要么必然找到了注释区的开始。
+			if (start == text.length() - 1) {  // 整个文档搜索到了最后一个字符，那么就直接退出。
 				hunkBuffer.append(text);
 				break;
 			}
-			// ��һ��ע����ǰ��Ķ���Դ�����ݣ�����hunkBuffer�������ƺ�����Ҫ������ո�������ˣ�����ķ���Ӧ��һ�������ո�֡�
+			// 第一块注释区前面的都是源码内容，加入hunkBuffer，但是似乎不需要加这个空格，如果加了，下面的分裂应以一个或多个空格分。
 			hunkBuffer.append(" " + text.substring(0, start));
-			text.delete(0, start); // ��text�д����������ɾ��
+			text.delete(0, start); // 将text中处理完的内容删掉
 			
-			start = 0; // ��ָ��ָ��textͷ����
+			start = 0; // 将指针指向text头部。
 			String startOper = new String();
-			if (text.charAt(start) == '/') { // ƥ��֮ǰ���ֵĲ�������ȷ��ע������
+			if (text.charAt(start) == '/') { // 匹配之前出现的操作符，确定注释区。
 				if (text.charAt(start + 1) == '*') {
 					startOper = "/*";
 				} else {
@@ -167,12 +168,12 @@ public static void main(String[] args) throws Exception {
 			}
 			String rage;
 
-			if (startOper.equals("//")) { // ȷ����ǰע������Χ�������˫б�ܣ���removeSC2��������ע�������ݡ�
+			if (startOper.equals("//")) { // 确定当前注释区范围，处理掉双斜杠，用removeSC2方法处理注释区内容。
 				int inedex = text.indexOf("\n");
-				if (inedex == -1) { // ���һ����ע��
+				if (inedex == -1) {  // 最后一样的注释
 					rage = text.substring(start + 2, text.length());
 					text = null;
-				} else { // ֮��������
+				} else { // 之后还有内容
 					rage = text.substring(start + 2, text.indexOf("\n"));
 					text.delete(0, text.indexOf("\n") + 1);
 				}
@@ -184,24 +185,14 @@ public static void main(String[] args) throws Exception {
 			} else {
 				text.deleteCharAt(0);
 				int tail = text.indexOf("\"");
-				while (tail >=1) {
-					int numl = 0;
-					for (int j = tail - 1; j >= 0; j--) {
-						if (text.charAt(j) == '\\') {
-							numl++;
-						} else {
-							break;
-						}
-					}
-					if (numl % 2 == 0) {
-						break;
-					} else {
-						tail = tail + 1;
-						tail = tail
-								+ text.substring(tail, text.length()).indexOf(
-										'"');
-					}
+				while ((tail > 1 && text.charAt(tail - 1) == '\\' && text
+						.charAt(tail - 2) != '\\')
+						|| (tail == 1 && text.charAt(0) == '\\')) { // 必定有一个tail与start对应.若引号前有两个双斜杠，则该引号为真正字符串结束。
+					tail = tail + 1;
+					tail = tail
+							+ text.substring(tail, text.length()).indexOf('"');
 				}
+				
 				rage = text.substring(0, tail);
 				i++;
 				hunkBuffer.append(" " + removeSC2(rage));
@@ -253,18 +244,19 @@ public static void main(String[] args) throws Exception {
 		return rage;
 	}
 
+
 	/**
-	 * �ж��ַ������Ƿ�����Ų�����������������߱����Լ����ǲ������򽫶��߷ֿ���Ȼ��ֱ����bag��
-	 * ��Ҫע��������һ���ַ����а�����<������>������Ϊ���ǲ��������Ա��java��ʹ�úܶ��<���֣�
-	 * ����˵��Ĭ������Ǽ��ŵĻ�һ��û�кͱ���������һ��
+	 * 判定字符串中是否包含着操作符，如果包含或者本身自己就是操作符则将二者分开，然后分别加入bag。
+	 * 需要注意的是如果一个字符串中包含了<，或者>，不认为这是操作符，以便和java中使用很多的<区分，
+	 * 就是说，默认如果是减号的话一定没有和变量夹杂在一起
 	 * 
 	 * @param oper
-	 *            ���ԵĲ�����
+	 *            测试的操作符
 	 * @param string
-	 *            ���Ե��ַ���
+	 *            测试的字符串
 	 * @param bag
-	 *            Ҫ�����bag
-	 * @return �Ƿ�������������߱����ǲ�����
+	 *            要加入的bag
+	 * @return 是否包含操作符或者本身是操作符
 	 */
 	public boolean diviOper(String oper, String string, Map<String, Integer> bag) {
 		if (string.equals(oper)) {
@@ -316,7 +308,7 @@ public static void main(String[] args) throws Exception {
 						endIndex++;
 					}
 					String temp = string.substring(startIndex, endIndex)
-							.toLowerCase(); // ֮ǰû�д����Сдת�����⡣
+							.toLowerCase(); // 之前没有处理大小写转换问题。
 					if (bag.keySet().contains(temp)) {
 						bag.put(temp, bag.get(temp) + 1);
 					} else {

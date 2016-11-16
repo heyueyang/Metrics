@@ -11,32 +11,35 @@ import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.TreeMap;
+import java.util.Map.Entry;
 
 /**
- * ��ȡԴ����Ϣ·����Ϣ��
+ * 提取源码信息路径信息。
  * 
  * @param id_commitId_fileIds
- *            ������id��commit_id��file_id���ɵ������б�
+ *            由所有id、commit_id和file_id构成的主键列表。
  * @param dictionary
- *            ���ʵ���������ƺ����Դ������ƶԵ�map��keyֵΪʵ���������ơ�
+ *            存放实际属性名称和属性代号名称对的map。key值为实际属性名称。
  * @param dictionary2
- *            ������Դ������ƺ�ʵ���������ƶԵ�map��
+ *            存放属性代号名称和实际属性名称对的map。
  * @param currStrings
- *            ��ǰ���ֹ������ԡ�
+ *            当前出现过的属性。
  * @param bow
- *            ������ȡԴ����Ϣ·����Ϣ�Ĵ������ࡣ
+ *            用以提取源码信息路径信息的词向量类。
  * @param content
- *            ʵ�ʵõ��ĸ�ʵ����keyΪid_commitId_fileIds�е�Ԫ�أ�valueΪ��Ӧ������ֵ����keyֵΪ(-1,-1,-1)
- *            ʱ��Ӧ��ֵΪ�������ơ�
+ *            实际得到的各实例，key为id_commitId_fileIds中的元素，value为对应的属性值。当key值为(-1,-1,-1)
+ *            时对应的值为属性名称。
  * @param colMap
- *            content�����Լ���������map����Ϊ�ڳ�������ʵ�������ݵĹ����У�ĳ��ʵ����ĳ������ֵ������Ҫ�ı�
- *            ��ɸ��ݴ�map���ٶ�Ӧ��content�и����Ե�ֵ��Ȼ�����޸ġ�
+ *            content中属性及其索引的map。因为在持续更新实例中数据的过程中，某个实例的某个属性值可能需要改变
+ *            则可根据此map快速对应到content中该属性的值，然后将其修改。
  * @param headmap
- *            content�е������ֶΣ�����������������Ƶ�map��
+ *            content中的属性字段，即存放所有属性名称的map。
  * @author niu
  *
  */
@@ -49,32 +52,36 @@ public class Extraction3 extends Extraction {
 	static Map<List<Integer>, StringBuffer> content;
 	Map<String, Integer> colMap;
 	static List<Integer> headmap;
-	static String bowDir = "/home/yueyang/data/bow m0/";
-	static String error_dir = "/home/yueyang/data/error/";
-	static String recoverDir = "/home/yueyang/data/info_new/";
-	static String[] projects = {"itextpdf"};//"ant", "camel", "eclipse", 
-	//, "jEdit", "lucene", "tomcat", "voldemort"
-	static String project = "itextpdf";
-	//
-	static String projectHome = "/home/yueyang/project/recover_new/";
+	static String bowDir = "/mnt/hgfs/vmware share/data/bow_csv/";
+	static String dicDir = "/mnt/hgfs/vmware share/data/dic_csv/";
+	static String error_dir = "/mnt/hgfs/vmware share/data/error/";
+	static String recoverDir = "/mnt/hgfs/vmware share/data/recover_info/";
+	static String[] projects = {"ant", "camel", "eclipse", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat", "voldemort"};//
+
+	//static String project = "";
+	static String projectHome = "/mnt/hgfs/vmware share/recover_projects/";
 	
 	public static void main(String[] args) throws Exception {
 		
 		for(int i = 0; i < projects.length; i++){
 			System.out.println("Write " + projects[i] + " bow metrics start...");
-			File resultFile = new File(bowDir + projects[i] + "Bow.csv");
+			//String resultPath = bowDir + projects[i] + "Bow.csv";
+			String resultPath = dicDir + projects[i] + "Dic.csv";
+			File resultFile = new File(resultPath);
 			if(resultFile.exists()){
+				System.out.println(bowDir + projects[i] + "Bow.csv" + " already exists!");
 				continue;
 			}
 			Map<List<Integer>, StringBuffer> bow = null;
 			Extraction3 extra = new Extraction3(projects[i], getCfFromTxt(recoverDir + projects[i] + "Recover.txt"), projectHome + projects[i] +"AllFiles/");
-			List<Integer> list = new ArrayList<Integer>();
-			list.add(12);
-			list.add(3233);
-			list.add(5329);
-			extra.sourceInfoEach(list,projectHome + projects[i] +"AllFiles/");
-			//bow = extra.getContent();
-			//writeContent(bow, projects[i], bowDir);
+			
+			try{
+				//extra.writeContent(extra.getContent(), resultPath);
+				extra.writeDictionary(extra.getDictionary(), resultPath);
+			}catch(Exception e){
+				e.printStackTrace();
+				continue;
+			}
 			System.out.println("Write " + projects[i] + " bow metrics finished!");
 		}
 		/*
@@ -88,10 +95,10 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��ȡ����������Ϣ��
+	 * 提取第三部分信息。
 	 * 
 	 * @param database
-	 *            ��Ҫ���ӵ����ݿ�
+	 *            需要连接的数据库
 	 * @param projectHome
 	 * @param startId
 	 * @param endId
@@ -104,8 +111,8 @@ public class Extraction3 extends Extraction {
 		super(database);
 		id_commitId_fileIds = new ArrayList<>();
 		setICFfromDatabase(startId, endId);
-		dictionary = new HashMap<>();
-		dictionary2 = new HashMap<>();
+		dictionary = new LinkedHashMap<>();
+		dictionary2 = new LinkedHashMap<>();
 		currStrings = new HashSet<>();
 		content = new HashMap<>();
 		colMap = new HashMap<>();
@@ -120,8 +127,8 @@ public class Extraction3 extends Extraction {
 			String projectHome) throws SQLException, IOException {
 		super(database);
 		setCommitId_fileIds(icf_id);
-		dictionary = new HashMap<>();
-		dictionary2 = new HashMap<>();
+		dictionary = new LinkedHashMap<>();
+		dictionary2 = new LinkedHashMap<>();
 		currStrings = new HashSet<>();
 		content = new HashMap<>();
 		colMap = new HashMap<>();
@@ -146,13 +153,13 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��ʼ��ʵ������keyset��ʵ��������extraction1�а�������ϢԶ����ʵ����Ҫ�����ģ�
-	 * ����Ĭ�Ϸ���(start==-1||end==-1)ʱ��Ӧ����extraction2Ϊ��׼������
+	 * 初始化实例集的keyset，实际上由于extraction1中包含的信息远多与实际想要分析的，
+	 * 所以默认分析(start==-1||end==-1)时，应该以extraction2为基准分析。
 	 * 
 	 * @param start
-	 *            ��Ϊ-1������extraction2�е�������Ϊ��׼�õ�����ʵ�������ָ������ֵ�������extraction2�е��Ӽ�Ϊ��׼
+	 *            若为-1，则以extraction2中的所有项为基准得到最终实例，如果指定特殊值则表明以extraction2中的子集为基准
 	 * @param end
-	 *            ��Ϊ-1������extraction2�е�������Ϊ��׼�õ�����ʵ�������ָ������ֵ�������extraction2�е��Ӽ�Ϊ��׼
+	 *            若为-1，则以extraction2中的所有项为基准得到最终实例，如果指定特殊值则表明以extraction2中的子集为基准
 	 * @throws SQLException
 	 * @throws IOException
 	 */
@@ -161,18 +168,18 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��content�����ָ����commit_id����������s��ֵ��
-	 * �˺�����Ҫ���pathinfo��changelog����Ϊpath��Ϣ����changelog��Ϣֻ��commit_id�йأ���file_id�޹ء�
+	 * 在content中针对指定的commit_id，更新属性s的值。
+	 * 此函数主要针对pathinfo和changelog，因为path信息或者changelog信息只与commit_id有关，与file_id无关。
 	 * 
 	 * @param s
-	 *            �������ơ������ǰ���Լ������и����ԣ�����ļ���ÿ��ʵ�����¸����Ե�ֵ�� ���������Լ�����Ӹ����ԣ�����ʼ��������ֵ��
+	 *            属性名称。如果当前属性集中已有该属性，则对文件中每个实例更新该属性的值， 否则，向属性集中添加该属性，并初始化各属性值。
 	 * @param tent
-	 *            ��ǰ���е���Ϣ��
+	 *            当前已有的信息。
 	 * @param commitId
-	 *            ��Ҫ���µ�ʵ����commit_id��
+	 *            需要更新的实例的commit_id。
 	 * @param value
-	 *            ��Ҫ���µ�ֵ��
-	 * @return �������ݺ��content��
+	 *            需要更新的值。
+	 * @return 更新内容后的content。
 	 */
 	public Map<List<Integer>, StringBuffer> writeInfo(String s,
 			Map<List<Integer>, StringBuffer> tent, int commitId, Integer value) {
@@ -194,7 +201,7 @@ public class Extraction3 extends Extraction {
 				}
 			}
 		} else {
-			// ������ʵ��������ȡcontent�еļ�Ҫ��������Ȼ����ݼ�Ҫ���������ٵõ������Զ�Ӧ���кš�
+			// 根据真实属性名获取content中的简要属性名。然后根据简要属性名快速得到该属性对应的列号。
 			String column = dictionary.get(s);
 			int index = colMap.get(column);
 			for (List<Integer> list : tent.keySet()) {
@@ -220,7 +227,7 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��ȡ���е�changelog��Ϣ,���������content�� ע�⣺changelog��Ϣֻ��commit_id�йأ���file_id�޹ء�
+	 * 获取所有的changelog信息,并将其加入content。 注意：changelog信息只跟commit_id有关，与file_id无关。
 	 * 
 	 * @param csvFile
 	 * @throws SQLException
@@ -228,14 +235,14 @@ public class Extraction3 extends Extraction {
 	 */
 	public void changeLogInfo() throws SQLException, IOException {
 		bow = new Bow();
-		// ������в�ͬ��commit_id
+		// 获得所有不同的commit_id
 		Set<Integer> commit_ids = new LinkedHashSet<>();
 		for (List<Integer> list : id_commitId_fileIds) {
 			if (!commit_ids.contains(list.get(1))) {
 				commit_ids.add(list.get(1));
 			}
 		}
-		// ��ÿ��commit_id����ȡ��changelog ��Ϣ��������content��
+		// 对每个commit_id，获取其changelog 信息，并加入content。
 		for (Integer commitId : commit_ids) {
 			if (commitId != -1) {
 				//System.out.println(commitId);
@@ -253,13 +260,13 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��ȡԴ���Դ���иĶ��Ĵ�����Ϣ��
-	 * ���ÿ�����ĵ�(commit_id,file_id)�ԣ������(���ĳ�θ�������Ϊd����ɾ����ĳ���ļ�����ô��û�ж�Ӧ���ļ�)
-	 * ��Ӧһ��java�ļ��� ͬʱ���Ӧ��һ��patch����Ҫ���ݽű�������ǰ���������Щ�����˵��ļ�����ͨ�����ݿ������е�patch��Ϣ
-	 * Ȼ��ʹ�ô˺�����ȡԴ���е�һЩ��Ϣ��
+	 * 获取源码和源码中改动的代码信息。
+	 * 针对每个更改的(commit_id,file_id)对，其可能(如果某次更改类型为d，即删除了某个文件，那么就没有对应的文件)
+	 * 对应一个java文件。 同时其对应于一个patch。需要根据脚本语言提前获得所有这些更改了的文件，并通过数据库获得所有的patch信息
+	 * 然后使用此函数提取源码中的一些信息。
 	 * 
 	 * @param projectHome
-	 *            ����������Ҫ��ȡ��Ϣ��javaԴ����ļ��С�
+	 *            包含所有需要提取信息的java源码的文件夹。
 	 * @throws SQLException
 	 * @throws IOException
 	 */
@@ -271,8 +278,7 @@ public class Extraction3 extends Extraction {
 
 	private void sourceInfoEach(List<Integer> list, String projectHome) throws SQLException, IOException {
 		if (list.get(1) != -1) {
-			System.out.println("extract from " + list.get(2) + "_"
-					+ list.get(1) + "_" + list.get(0) + ".java");
+			//System.out.println("extract from " + list.get(2) + "_"+ list.get(1) + "_" + list.get(0) + ".java");
 
 			sql = "select patch from patches where commit_id="
 					+ list.get(1) + " and file_id=" + list.get(2);
@@ -282,7 +288,7 @@ public class Extraction3 extends Extraction {
 			String patchString="";
 			if (!resultSet.next()) {
 				System.out.println("patches in commit_id=" + list.get(1)
-						+ " and file_id" + list.get(2) + " is empty!");
+						+ " and file_id=" + list.get(2) + " is empty!");
 			}else {
 				patchString= resultSet.getString(1);
 			}
@@ -307,7 +313,7 @@ public class Extraction3 extends Extraction {
 			
 			
 			String sourcePath = projectHome + "/" + list.get(2)
-			+ "_" + list.get(1) + "_" + list.get(0) + ".java";
+					+ "_" + list.get(1) + "_" + list.get(0) + ".java";
 			File sourceFile = new File(projectHome + "/" + list.get(2)
 					+ "_" + list.get(1) + "_" + list.get(0) + ".java");
 			BufferedReader bReader;
@@ -348,21 +354,21 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��Ը�����commit_id,file_id�ԣ���tent��s��ֵ���¡�
-	 * ��Ҫע����ǣ������Ĵ��䵼��extraction3��ȡ���������һ���Ƕ��ţ�
-	 * ����weka�޷�ʶ�����������Merge���merge123()�����д���
+	 * 针对给定的commit_id,file_id对，将tent中s的值更新。
+	 * 需要注意的是，这样的搭配导致extraction3提取的数据最后一个是逗号，
+	 * 导致weka无法识别，这个问题在Merge类的merge123()方法中处理。
 	 * 
 	 * @param s
-	 *            ��Ҫ���µ�����
+	 *            需要更新的属性
 	 * @param tent
-	 *            ��Ҫ���µİ���ʵ����ʵ������
+	 *            需要更新的包含实例的实例集。
 	 * @param commitId
-	 *            ��Ҫ���µ�ʵ����Ӧ��commit_id��
+	 *            需要更新的实例对应的commit_id。
 	 * @param fileId
-	 *            ��Ҫ���µ�ʵ����Ӧ��file_id��
+	 *            需要更新的实例对应的file_id。
 	 * @param value
-	 *            ��Ҫ���µ�ֵ��
-	 * @return �µ�ʵ������
+	 *            需要更新的值。
+	 * @return 新的实例集。
 	 */
 	public Map<List<Integer>, StringBuffer> writeInfo(String s,
 			Map<List<Integer>, StringBuffer> tent, int commitId, int fileId,
@@ -408,7 +414,7 @@ public class Extraction3 extends Extraction {
 	}
 
 	/**
-	 * ��ȡpath�е���Ϣ��
+	 * 获取path中的信息。
 	 * 
 	 * @throws SQLException
 	 * @throws IOException
@@ -426,7 +432,7 @@ public class Extraction3 extends Extraction {
 			String path = resultSet.getString(1);
 			Map<String, Integer> pathName = bow.bowPP(path);
 			for (String s : pathName.keySet()) {
-				content = writeInfo(s, content, list.get(1), list.get(2), // ����������������Ϊһ��
+				content = writeInfo(s, content, list.get(1), list.get(2), // 两个函数可以整合为一个
 						pathName.get(s));
 			}
 		}
@@ -538,23 +544,47 @@ public class Extraction3 extends Extraction {
 	public Map<String, String> getDictionary() {
 		return dictionary2;
 	}
-	/*
-	 * ��content�����csv�ļ���*
-	 */
-	static void writeContent(Map<List<Integer>, StringBuffer> cont, String project, String dir) throws SQLException, IOException{
 
-		File resultFile = new File(dir + project + "Bow.csv");
+	void writeContent(Map<List<Integer>, StringBuffer> cont, String path) throws Exception{
+		System.out.println("Start write bow content into " + path + "...");
+		File resultFile = new File(path);
 		FileWriter fw = new FileWriter(resultFile.getAbsoluteFile());
 		BufferedWriter bw = new BufferedWriter(fw);
-		
-		StringBuffer sBuffer = new StringBuffer();
-		sBuffer.append(cont.get(headmap) + "\n");
-		for (List<Integer> list : id_commitId_fileIds) {
-			//sBuffer.append(list.get(1) + "," + list.get(2) + ",");
-			sBuffer.append(cont.get(list) + "\n");
+        
+		try{
+			bw.write(cont.get(headmap) + "\n");  
+			
+			for (List<Integer> list : id_commitId_fileIds) {
+				bw.write((cont.get(list) + "\n"));  
+				cont.remove(list);
+			}
+			bw.flush();
+			bw.close();
+			System.out.println("bow path:" + path + " finished!");
+		}catch(Exception e){
+			throw new Exception();
 		}
-		bw.write(sBuffer.toString());
-		bw.close();
-
+	}
+	
+	@SuppressWarnings("unchecked")
+	void writeDictionary(Map<String, String> dic, String path) throws Exception{
+		System.out.println("Start write bow dictionary into " + path + "...");
+		File resultFile = new File(path);
+		FileWriter fw = new FileWriter(resultFile.getAbsoluteFile());
+		BufferedWriter bw = new BufferedWriter(fw);
+		Set mapSet = dic.entrySet();
+		try{
+			
+			for (Object list : mapSet) {
+				bw.write((Entry<String, String>)list + "\n");  
+				//dic.remove(list);
+			}
+			bw.flush();
+			bw.close();
+			System.out.println("bow path:" + path + " finished!");
+		}catch(Exception e){
+			e.printStackTrace();
+			throw new Exception();
+		}
 	}
 }

@@ -14,7 +14,7 @@ import java.util.Map;
 
 public class FileOperation {
 	private static SQLConnect connect = null;
-	private static String InfoDir = "/home/yueyang/data/info_new_all0/"; 
+	private static String InfoDir = "/home/yueyang/data/recover_info/"; 
 	private static String project = null;
 	private static String MasterBranchId = "0";
 	
@@ -135,20 +135,26 @@ public class FileOperation {
 					maxDateMap.put(maxDate.getString(1), maxDate.getString(2)); 
 				}*/
 				
-				/*String RecentCommitSQl = "select a.file_id,a.commit_id,a.current_file_path,a.rev,a.commit_date,a.branch_id "
+				//out of memory
+				/*String RecentCommitSQl =  "select a.file_id,a.commit_id,a.current_file_path,a.rev,a.commit_date,a.type "
 						+ "from "
-						+ "(select actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,scmlog.commit_date,actions.branch_id  "
+						+ "(select actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,scmlog.commit_date,actions.branch_id,actions.type  "
 							+ " from actions inner join scmlog on scmlog.id=actions.commit_id"
 							+ " where actions.commit_id<=" + startCommitId
-							+ " and RIGHT(current_file_path,4)='java' and branch_id=" + MasterBranchId
-							+ ") a inner join "
-						+ " (select actions.file_id,max(scmlog.commit_date) date "
-							+ "from actions inner join scmlog on scmlog.id=actions.commit_id "
-							+ " where actions.commit_id<=" + startCommitId
-							+ " and RIGHT(current_file_path,4)='java' and branch_id=" + MasterBranchId
-							+ " actions.commit_date>a.commit_date and actions.file_id=a.file_id"
-							+ " group by file_id ) b "
-						+ "on a.commit_date=b.date";*/	
+							+ " and RIGHT(current_file_path,4)='java'"
+							+ " and branch_id=" + MasterBranchId
+							+ ") a"
+							+ " where a.commit_date="
+								+ " (select max(scmlog.commit_date)"
+								+ "from actions inner join scmlog on scmlog.id=actions.commit_id "
+								+ " where actions.commit_id<=" + startCommitId
+								+ " and branch_id=" + MasterBranchId
+								+ " and actions.file_id = a.file_id)"
+							+ " and a.commit_id="
+								+ " (select max(commit_id) from actions"
+								+ " where commit_"
+								+ " and actions.file_id = a.file_id)";*/
+				
 				
 				String RecentCommitSQl = "select a.file_id,a.commit_id,a.current_file_path,a.rev,a.commit_date,a.type "
 						+ "from "
@@ -161,10 +167,20 @@ public class FileOperation {
 						+ " where not exists "
 							+ " (select actions.id"
 							+ " from actions inner join scmlog on scmlog.id=actions.commit_id  "
-							+ " where actions.file_id=a.file_id"
-							+ " and actions.commit_id<=" + startCommitId
+							+ " where actions.commit_id<=" + startCommitId
 							+ " and branch_id=" + MasterBranchId
-							+ " and a.commit_date<scmlog.commit_date)";
+							+ "	and actions.file_id=a.file_id"
+							+ " and a.commit_date<scmlog.commit_date)"
+						+ " and not exists "
+							+ " (select actions.id"
+							+ " from actions inner join scmlog on scmlog.id=actions.commit_id  "
+							+ " where actions.commit_id<=" + startCommitId
+							+ " and branch_id=" + MasterBranchId
+							+ "	and actions.file_id=a.file_id"
+							+ " and a.commit_date=scmlog.commit_date"
+							+ " and a.commit_id<actions.commit_id)";
+				
+				
 				//System.out.println(str);
 				//对每一个file，找到距离startCommitId最近的commit_id
 				/*
@@ -181,10 +197,11 @@ public class FileOperation {
 				while(RecentCommit.next()){
 					//System.out.println(CommitOfFile.getString(6) + "----" + (CommitOfFile.getString(6).contains("2")));
 					//remove the unchanged files
-					if(!RecentCommit.getString(6).equals("D"))//FileChange.containsKey(RecentCommit.getString(1)) == true && 
+					if(FileChange.containsKey(RecentCommit.getString(1)) == true &&!RecentCommit.getString(6).equals("D"))// 
 					{
 					str = RecentCommit.getString(1) + "\t" + RecentCommit.getString(2)+ "\t" + RecentCommit.getString(3) + "\t" + RecentCommit.getString(4) + "\t" 
-				+ ((FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0) + "\t" + RecentCommit.getString(5) + "\t" + RecentCommit.getString(6)+ "\n";
+				+ ((FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0) + "\t" + RecentCommit.getString(5) + "\n";
+					//+ "\t" + RecentCommit.getString(6)
 					bWriter.append(str);
 					}
 					
