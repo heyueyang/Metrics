@@ -41,5 +41,6 @@ do
 	sh /home/yueyang/data/exportData.sh $file $threshold
 	echo "------extracting "$file" finished!-------"
 	rm -f $tempPath
+
 	cd ../
 done

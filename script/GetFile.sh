@@ -1,7 +1,7 @@
 
 gitFile=$1
 FilePath=/home/yueyang/projects/
-infoPath="/home/yueyang/data/info_new/"$gitFile"Recover.txt"
+infoPath="/home/yueyang/data/recover_info/"$gitFile"Recover.txt"
 
 
 echo $infoPath

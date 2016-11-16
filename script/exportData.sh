@@ -40,4 +40,5 @@ fi
 sudo mysql -uroot -p111111 $project -e "SELECT * FROM metrics_info">$result_dir$result_file 
 
 sed -i 's/\t/,/g' /home/yueyang/data/complexity_csv/$result_file
+chmod 777 -R  /home/yueyang/data/complexity_csv/$result_file
 
