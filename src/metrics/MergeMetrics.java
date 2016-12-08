@@ -18,17 +18,19 @@ import java.util.Set;
 public class MergeMetrics {
 	
 	
-	static String resultDir = "/mnt/hgfs/vmware share/data/final_metrics/";
-	static String complexDir = "/mnt/hgfs/vmware share/data/complexity_csv/";
-	static String networkDir = "/mnt/hgfs/vmware share/data/network_csv/";
-	static String bowDir = "/mnt/hgfs/vmware share/data/bow_csv/";
-	static String sourceCodeDir = "/mnt/hgfs/vmware share/recover_projects/";
-	static String recoverDir = "/mnt/hgfs/vmware share/data/recover_info/";
+	static String resultDir = "/home/yueyang/data/final_metrics/";
+	static String complexDir = "/home/yueyang/data/com_csv/";
+	static String networkDir = "/home/yueyang/data/network_csv/";
+	static String bowDir = "/home/yueyang/data/bow_csv/";
+	static String othersDir = "/home/yueyang/data/others_csv/";
+	static String sourceCodeDir = "/home/yueyang/recover_projects/";
+	static String recoverDir = "/home/yueyang/data/recover_info/";
 	
 	String project = "";
 	String complexPath = "" ;
 	String networkPath = "" ;
 	String bowPath = "" ;
+	String othersPath = "";
 	String resultPath = "" ;
 	String projectHome = "" ;
 	
@@ -41,7 +43,7 @@ public class MergeMetrics {
 	static StringBuffer attrString;
 	static List<String> netFileNames = new ArrayList<String>();
 	static String netNullString;
-	static String[] projects = {"ant",  "camel", "eclipse", "itextpdf", "jEdit", "liferay","lucene", "struts", "tomcat"};//, "voldemort"
+	static String[] projects = {"ant" ,"camel","eclipse",  "itextpdf", "jEdit", "liferay","lucene", "struts", "tomcat", "voldemort"};// ,
 	
 	public static void main(String[] args) throws Exception {
 		for(int i = 0; i < projects.length; i++){
@@ -65,11 +67,13 @@ public class MergeMetrics {
 		}else{
 			Map<List<Integer>, String> complex = readComplex(complexPath);
 
-			Map<List<Integer>, String> network = readNetwork(networkPath);
+			Map<List<Integer>, String> network = readNetwork(networkPath);//null;//
 			
-			Map<List<Integer>, StringBuffer> bow = readBowFromCSV(bowPath);
-			//Map<List<Integer>, StringBuffer> bow = null;
-			merge(resultPath, complex, network, bow);
+			Map<List<Integer>, String> others = readOthers(othersPath);//null;//
+			
+			Map<List<Integer>, StringBuffer> bow = readBowFromCSV(bowPath);//null;//
+
+			merge(resultPath, complex, network, bow, others);
 		}
 	}
 	
@@ -86,12 +90,13 @@ public class MergeMetrics {
 		complexPath = complexDir + project + ".csv" ;
 		networkPath = networkDir + project + "Net.csv";
 		bowPath = bowDir + project + "Bow.csv";
+		othersPath = othersDir + project + "Others.csv";
 		resultPath = resultDir + project + ".csv";
 		projectHome = sourceCodeDir + project + "AllFiles/";
 	}
 
 
-	private static void merge(String resultPath, Map<List<Integer>, String> complex, Map<List<Integer>, String> network, Map<List<Integer>, StringBuffer> bow) throws IOException{
+	private static void merge(String resultPath, Map<List<Integer>, String> complex, Map<List<Integer>, String> network, Map<List<Integer>, StringBuffer> bow, Map<List<Integer>, String> others) throws IOException{
 		System.out.println("merge start...");
 		File file = new File(resultPath);
 		if (!file.exists()) {
@@ -114,6 +119,7 @@ public class MergeMetrics {
 				bw.write(netNullString);
 			}
 			
+			bw.write(others.get(list) + ",");
 			bw.write(bow.get(list) + ",");
 			bw.write(label.get(list) + "\n");
 			
@@ -156,10 +162,7 @@ public class MergeMetrics {
 			ID_commitId_fileId.add(Integer.parseInt(record[record.length-2]));
 			ID_commitId_fileId.add(Integer.parseInt(record[2]));
 			ID_commitId_fileId.add(Integer.parseInt(record[1]));
-			//System.out.println(line);
-			//System.out.println(line.indexOf(record[0]+","));
-			
-			//System.out.println(ID_commitId_fileId.toString());
+
 			id_commitId_fileIds.add(ID_commitId_fileId);
 			
 			/*List<Integer> commitId_fileId = new ArrayList<Integer>();
@@ -226,7 +229,7 @@ public class MergeMetrics {
 		bow = extra.getContent();
 		attrString.append("," + bow.get(extra.headmap));
 		//System.out.println(bow.get(extra.headmap));
-		extra.writeContent(bow, project);
+		//extra.writeContent(bow, bowDir + project + "Bow.txt");
 		System.out.println("extract bow metrics finished!");
 		return bow;
 	}
@@ -236,7 +239,7 @@ private Map<List<Integer>, StringBuffer> readBowFromCSV(String path) throws Exce
 		if(!new File(path).exists()){
 			System.out.println("bow path:" + path + "not exists!");
 			Map<List<Integer>, StringBuffer> bow = readBowContent(this.projectHome);
-			//writeMap(bow,bowDir + project + "Bow.txt");
+			writeMap(bow,path);
 			return bow;
 		}
 		
@@ -254,22 +257,58 @@ private Map<List<Integer>, StringBuffer> readBowFromCSV(String path) throws Exce
 
 		String line;
 		String head = bReader.readLine();
+		String[] record = head.split(",");
 		//System.out.println(head);
-		attrString.append("," + head);
+		attrString.append("," + head.substring(new String(record[0] + "," + record[1] + "," + record[2] + ",").length()));
 		while ((line = bReader.readLine()) != null) {
-			String[] record = line.split(",");
+			record = line.split(",");
 			
 			List<Integer> ID_commitId_fileId = new ArrayList<Integer>();
 			ID_commitId_fileId.add(Integer.parseInt(record[0]));
 			ID_commitId_fileId.add(Integer.parseInt(record[1]));
 			ID_commitId_fileId.add(Integer.parseInt(record[2]));
-			bow.put(ID_commitId_fileId, new StringBuffer(line));
+			bow.put(ID_commitId_fileId, new StringBuffer(line.substring(new String(record[0] + "," + record[1] + "," + record[2] + ",").length())));
 		}
 		bReader.close();
 		System.out.println("read bow from path:" + path + "finished!");
 		return bow;
 		
 	}
+
+private static Map<List<Integer>, String> readOthers(String path) throws IOException{
+	
+	System.out.println("others metrics path:" + path);
+	Map<List<Integer>, String> complex = new HashMap<List<Integer>, String>();
+	BufferedReader bReader = null;
+	try {
+		
+		bReader = new BufferedReader(new FileReader(path));
+	} catch (FileNotFoundException e) {
+		// TODO Auto-generated catch block
+		e.printStackTrace();
+	}
+
+	String line;
+	String head = bReader.readLine();
+	String[] record = head.split(",");
+	//System.out.println(head.substring(new String(record[0] + "," + record[1] + "," + record[2] + ",").length()));
+	attrString.append("," + head.substring(new String(record[0] + "," + record[1] + "," + record[2] + ",").length()));
+	while ((line = bReader.readLine()) != null) {
+		record = line.split(",");
+		List<Integer> ID_commitId_fileId = new ArrayList<Integer>();
+		ID_commitId_fileId.add(Integer.parseInt(record[2]));
+		ID_commitId_fileId.add(Integer.parseInt(record[1]));
+		ID_commitId_fileId.add(Integer.parseInt(record[0]));
+
+		
+		complex.put(ID_commitId_fileId, line.substring(new String(record[0]+ "," + record[1] + ","+ record[2] + ",").length()));
+	}
+	bReader.close();
+	
+	return complex;
+	
+}
+
 
 public static Map<String,List<Integer>> getPath2ICFfromTxt(String path) throws NumberFormatException, IOException {
 	Map<String,List<Integer>> Path2ICF = new HashMap<String,List<Integer>>() ;
@@ -290,7 +329,7 @@ public static Map<String,List<Integer>> getPath2ICFfromTxt(String path) throws N
 	return Path2ICF;
 }
 
-public void writeMap( HashMap<List<Integer>,String> map, String path) throws IOException{
+public void writeMap( Map<List<Integer>, StringBuffer> bow, String path) throws IOException{
 	File file = new File(path);
 	if (!file.exists()) {
 	    file.createNewFile();
@@ -300,19 +339,17 @@ public void writeMap( HashMap<List<Integer>,String> map, String path) throws IOE
 	 
 	StringBuffer sBuffer = new StringBuffer();
 	int cnt = 0;
-	Object[] keys = map.keySet().toArray();
-	for (Object list : keys) {
-		sBuffer.append(map.get((List<Integer>)list) + "\n");
-
+	Set<List<Integer>> keys = bow.keySet();
+	for (List<Integer> list : keys) {
+		//sBuffer.append(map.get((List<Integer>)list) + "\n");
 		//System.out.println(cnt++);
-		
-		if(++cnt%100 == 0){
-			//System.out.println("*************************************************");
+		/*if(++cnt%100 == 0){
 			bw.write(sBuffer.toString());
 			bw.flush();
-			//sBuffer.setLength(0);
 			sBuffer = new StringBuffer();
-		}
+		}*/
+		//System.out.println(bow.get((List<Integer>)list).toString());
+		bw.write( bow.get((List<Integer>)list).toString() + "\n");
 	}
 	
 	bw.write(sBuffer.toString());
@@ -320,36 +357,5 @@ public void writeMap( HashMap<List<Integer>,String> map, String path) throws IOE
 	bw.close();
 	System.out.println("result path:" + resultPath + " finished!");
 }
-
-public void writeMap(Map<List<Integer>,StringBuffer> map, String path) throws IOException{
-	File file = new File(path);
-	if (!file.exists()) {
-	    file.createNewFile();
-	   }
-	FileWriter fw = new FileWriter(file.getAbsoluteFile());
-	BufferedWriter bw = new BufferedWriter(fw);
-	 
-	//int cnt = 0;
-	//Object[] keys = map.keySet().toArray();
-	Set mapSet = map.entrySet();
-	for (Object list : mapSet) {
-		@SuppressWarnings("unchecked")
-		Entry<List<Integer>,StringBuffer> item = (Entry<List<Integer>,StringBuffer>)list;
-		/*sBuffer.append(map.get((List<Integer>)list).toString() + "\n");
-		if(++cnt%100 == 0){
-			//System.out.println("*************************************************");
-			bw.write(sBuffer.toString());
-			bw.flush();
-			//sBuffer.setLength(0);
-			sBuffer = new StringBuffer();
-		}*/
-		bw.write(item + "\n");
-		map.remove(list);
-	}
-	bw.flush();
-	bw.close();
-	System.out.println("result path:" + resultPath + " finished!");
-}
-
 
 }

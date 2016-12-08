@@ -52,21 +52,21 @@ public class Extraction3 extends Extraction {
 	static Map<List<Integer>, StringBuffer> content;
 	Map<String, Integer> colMap;
 	static List<Integer> headmap;
-	static String bowDir = "/mnt/hgfs/vmware share/data/bow_csv/";
-	static String dicDir = "/mnt/hgfs/vmware share/data/dic_csv/";
-	static String error_dir = "/mnt/hgfs/vmware share/data/error/";
-	static String recoverDir = "/mnt/hgfs/vmware share/data/recover_info/";
-	static String[] projects = {"ant", "camel", "eclipse", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat", "voldemort"};//
+	static String bowDir = "/home/yueyang/data/bow_csv/";
+	static String dicDir = "/home/yueyang/data/dic_csv/";
+	static String error_dir = "/home/yueyang/data/error/";
+	static String recoverDir = "/home/yueyang/data/recover_info/";
+	static String[] projects = {"ant", "eclipse", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat", "voldemort"};//, "camel"
 
 	//static String project = "";
-	static String projectHome = "/mnt/hgfs/vmware share/recover_projects/";
+	static String projectHome = "/home/yueyang/recover_projects/";
 	
 	public static void main(String[] args) throws Exception {
 		
 		for(int i = 0; i < projects.length; i++){
 			System.out.println("Write " + projects[i] + " bow metrics start...");
-			//String resultPath = bowDir + projects[i] + "Bow.csv";
-			String resultPath = dicDir + projects[i] + "Dic.csv";
+			String resultPath = bowDir + projects[i] + "Bow.csv";
+			String resultPath2 = dicDir + projects[i] + "Dic.csv";
 			File resultFile = new File(resultPath);
 			if(resultFile.exists()){
 				System.out.println(bowDir + projects[i] + "Bow.csv" + " already exists!");
@@ -76,8 +76,8 @@ public class Extraction3 extends Extraction {
 			Extraction3 extra = new Extraction3(projects[i], getCfFromTxt(recoverDir + projects[i] + "Recover.txt"), projectHome + projects[i] +"AllFiles/");
 			
 			try{
-				//extra.writeContent(extra.getContent(), resultPath);
-				extra.writeDictionary(extra.getDictionary(), resultPath);
+				extra.writeContent(extra.getContent(), resultPath);
+				extra.writeDictionary(extra.getDictionary(), resultPath2);
 			}catch(Exception e){
 				e.printStackTrace();
 				continue;
