@@ -23,6 +23,7 @@ public class MergeMetrics {
 	static String networkDir = "/home/yueyang/data/network_csv/";
 	static String bowDir = "/home/yueyang/data/bow_csv/";
 	static String othersDir = "/home/yueyang/data/others_csv/";
+	static String selectedDir = "/home/yueyang/data/selected_csv/";
 	static String sourceCodeDir = "/home/yueyang/recover_projects/";
 	static String recoverDir = "/home/yueyang/data/recover_info/";
 	
@@ -31,6 +32,7 @@ public class MergeMetrics {
 	String networkPath = "" ;
 	String bowPath = "" ;
 	String othersPath = "";
+	String selectedPath = "";
 	String resultPath = "" ;
 	String projectHome = "" ;
 	
@@ -91,6 +93,7 @@ public class MergeMetrics {
 		networkPath = networkDir + project + "Net.csv";
 		bowPath = bowDir + project + "Bow.csv";
 		othersPath = othersDir + project + "Others.csv";
+		selectedPath = selectedDir + project + ".csv";
 		resultPath = resultDir + project + ".csv";
 		projectHome = sourceCodeDir + project + "AllFiles/";
 	}
