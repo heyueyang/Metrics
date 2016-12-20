@@ -56,10 +56,10 @@ public class Extraction3 extends Extraction {
 	static String dicDir = "/home/yueyang/data/dic_csv/";
 	static String error_dir = "/home/yueyang/data/error/";
 	static String recoverDir = "/home/yueyang/data/recover_info/";
-	static String[] projects = {"ant", "eclipse", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat", "voldemort"};//, "camel"
+	static String[] projects = {"ant", "eclipse", "camel", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat"};//, "voldemort"
 
 	//static String project = "";
-	static String projectHome = "/home/yueyang/recover_projects/";
+	static String projectHome = "c";
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -314,8 +314,6 @@ public class Extraction3 extends Extraction {
 			
 			String sourcePath = projectHome + "/" + list.get(2)
 					+ "_" + list.get(1) + "_" + list.get(0) + ".java";
-			File sourceFile = new File(projectHome + "/" + list.get(2)
-					+ "_" + list.get(1) + "_" + list.get(0) + ".java");
 			BufferedReader bReader;
 			try {
 				bReader = new BufferedReader(new FileReader(sourcePath));
@@ -337,6 +335,10 @@ public class Extraction3 extends Extraction {
 			
 				String error_file_path = error_dir + "/" + list.get(2)
 				+ "_" + list.get(1) + "_" + list.get(0) + "_error.txt";
+				File errorFile = new File(error_file_path);
+				if(!errorFile.exists()){
+					errorFile.createNewFile();
+				}
 				FileWriter fw = new FileWriter(error_file_path);
 				BufferedWriter bw = new BufferedWriter(fw);
 				bw.write(sBuffer.toString());

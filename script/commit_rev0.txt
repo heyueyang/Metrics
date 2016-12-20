@@ -6,6 +6,5 @@ ant	12289	6bfe7759b0d7662f764a6efd97436b48aa74da2a	1	master
 camel	27743	5a32be6497ee64782ab2b9f507033e5e6e5840b3	1	master
 struts	2513	e893492adcacc5b4f09f378fe1d8f80de1814038	1	master
 lucene	2594	0e9c0fee62fed3f194e2f444f2d756435e28ebcc	7	lucene_3_0_exposed
-synapse	1821	47ca2424e3eb57e0d0386c77b421b11e9b87438e	15	trunk
 voldemort	3961	fdbad13fdb9fbffebfd9afe1781c3ffa1814700e	75	master
 eclipse	25513	c0f9341badc01719d6b4f4d3ab99e20a8dc0821a	1	master

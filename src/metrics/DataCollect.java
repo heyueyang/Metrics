@@ -40,6 +40,7 @@ public class DataCollect {
 		start_tag.put("liferay", "24930");//17470
 		start_tag.put("tomcat", "14026");//no tag in master,in trunk13813
 		start_tag.put("voldemort", "3961");//3961
+		start_tag.put("synapse","1821");
 		start_tag.put("jEdit", "2837");//no tag in git svn2git
 		start_tag.put("itextpdf", "3297");//no tag in master
 		start_tag.put("lucene", "2594");// no tag in git svn2git
@@ -47,13 +48,16 @@ public class DataCollect {
 		//writeMasterBranchInfo("/home/yueyang/data/project_branch.txt");
 		//writeRevisionInfo(start_tag, "/home/yueyang/data/commit_rev.txt");
 		
+		/*FileOperation fo = new FileOperation("synapse");
+		fo.CompleteExcute(start_tag.get("synapse"));	System.out.println("------- finished ! -------");
+    	*/
+		
     	for(int i = 0;i < files.length; i++){
     		if(!files[i].isDirectory()) continue;
     		System.out.println("------- " + files[i].getName()+ " -------");
     		FileOperation fo = new FileOperation(files[i].getName());
     		fo.CompleteExcute(start_tag.get(files[i].getName()));
     		
-    		System.out.println("------- finished ! -------");
     	}
 		
 		//CalComplexity();

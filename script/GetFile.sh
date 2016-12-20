@@ -1,6 +1,6 @@
 
 gitFile=$1
-FilePath=/home/yueyang/projects/
+FilePath=/home/yueyang/gitFile/
 infoPath="/home/yueyang/data/recover_info/"$gitFile"Recover.txt"
 
 

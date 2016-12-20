@@ -58,19 +58,22 @@ public class FileOperation {
 	public String[] getMasterBranch() throws SQLException,
 	IOException {
 		String[] MaxBranch = new String[2];
-		String NameOfBranch = "select actions.branch_id,branches.name,count(*) from branches inner join  actions on actions.branch_id=branches.id group by actions.branch_id";
+		String NameOfBranch = "select actions.branch_id,branches.name,count(distinct commit_id) cnt from branches inner join  actions on actions.branch_id=branches.id "
+				+ " group by actions.branch_id"
+				+ " order by cnt desc";
 		ResultSet branch = connect.Excute(NameOfBranch);
 		int MaxCnt = 0;
 		while(branch.next()){
-			if(branch.getInt(3)>MaxCnt){
+			if(branch.getString(2).equals("master")){
+				MaxBranch[0] = branch.getString(1);
+				MaxBranch[1] = branch.getString(2);
+				break;
+			}else if(branch.getInt(3)>MaxCnt){
 				MaxCnt = branch.getInt(3);
 				MaxBranch[0] = branch.getString(1);
 				MaxBranch[1] = branch.getString(2);
 			}
-			if(branch.getString(2).equals("master")){
-				MaxBranch[0] = branch.getString(1);
-				MaxBranch[1] = branch.getString(2);
-			}
+			
 		}
 		return MaxBranch;
 	}
@@ -183,30 +186,20 @@ public class FileOperation {
 							+ " and a.commit_id<actions.commit_id)";
 				
 				
-				//System.out.println(str);
-				//对每一个file，找到距离startCommitId最近的commit_id
-				/*
-				String RecentCommitSQl = "select actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,scmlog.commit_date,actions.type"
-						+ "  from actions inner join scmlog on scmlog.id=actions.commit_id"
-						+ "  where actions.commit_id<="  + startCommitId 
-						//+ "  and actions.type<>'R' and actions.type<>'C' and actions.type<>'V' and actions.type<>'D'"
-						+ "  and RIGHT(actions.current_file_path,4)='java'"
-						+ "  and actions.branch_id=" + MasterBranchId
-						+ "  group by actions.file_id";*/
 				Map<String,String> OtherMetrics = new HashMap<String,String>();
 				System.out.println(RecentCommitSQl);
 				ResultSet RecentCommit = connect.Excute(RecentCommitSQl);
 				String str = "";
 				while(RecentCommit.next()){
-					//System.out.println(CommitOfFile.getString(6) + "----" + (CommitOfFile.getString(6).contains("2")));
 					//remove the unchanged files
-					if(FileChange.containsKey(RecentCommit.getString(1)) == true && !RecentCommit.getString(6).equals("D"))// 
+					//if(!RecentCommit.getString(6).equals("D"))// 
+					if(FileChange.containsKey(RecentCommit.getString(1)) == true && !RecentCommit.getString(6).equals("D") && (!RecentCommit.getString(3).contains("test") || !RecentCommit.getString(3).contains("Test")))// 
 					{
-					int changeLoc = (FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0;
-					str = RecentCommit.getString(1) + "\t" + RecentCommit.getString(2)+ "\t" + RecentCommit.getString(3) + "\t" + RecentCommit.getString(4) + "\t" 
-				+ changeLoc + "\t" + RecentCommit.getString(5) + "\t" + RecentCommit.getString(6)+ "\t" + RecentCommit.getString(7)+ "\n";
-					bWriter.append(str);
-					OtherMetrics.put(RecentCommit.getString(1), RecentCommit.getString(1) + "," + RecentCommit.getString(2)+ "," + changeLoc);
+						int changeLoc = (FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0;
+						str = RecentCommit.getString(1) + "\t" + RecentCommit.getString(2)+ "\t" + RecentCommit.getString(3) + "\t" + RecentCommit.getString(4) + "\t" 
+					+ changeLoc + "\t" + RecentCommit.getString(5) + "\t" + RecentCommit.getString(6)+ "\t" + RecentCommit.getString(7)+ "\n";
+						bWriter.append(str);
+						OtherMetrics.put(RecentCommit.getString(1), RecentCommit.getString(1) + "," + RecentCommit.getString(2)+ "," + changeLoc);
 					}
 					
 				}
@@ -471,11 +464,11 @@ public static ArrayList<String> findFiles(String baseDirName, String targetFileN
 			//System.out.println("create file " + recoverInfoFile.getPath()+recoverInfoFile.createNewFile());
 		}
 		BufferedWriter bWriter = new BufferedWriter(new FileWriter(recoverInfoFile));
-		bWriter.append("fileId" + "," + "CommitId" + "," + "ChangeLoc" + "," + "ChangeLocBefore"+ "," + "ChangeCntBefore" + "\n");
+		bWriter.append("fileId" + "," + "CommitId" + "," + "ChangeLoc" + "," + "ChangeLocBefore" + "," + "ChangeCntBefore" + "," + "bugCntBefore" + "\n");
 		//HashMap<String,Integer> CLocBeforeMap = new HashMap<String,Integer>();
 		for(String fileId : otherMetrics.keySet()){
 			//System.out.println(fileId);
-			String ChangedFileSQL = " select actions.file_id,patch"//commit_date,
+			String ChangedFileSQL = " select actions.file_id,patch,is_bug_fix"//commit_date,
 						+ " from (patches inner join actions on patches.file_id=actions.file_id and patches.commit_id=actions.commit_id) "
 						+ " inner join scmlog on scmlog.id=actions.commit_id "
 						+ " where actions.type='M' and actions.commit_id<=" + startCommitId //]+ " and actions.commit_id<" + endCommitId
@@ -488,11 +481,13 @@ public static ArrayList<String> findFiles(String baseDirName, String targetFileN
 				//CLocBeforeMap.put(fileId, ChangedFile.getInt(2));
 				int changeLoc = 0;
 				int changeCnt = 0;
+				int bugCnt = 0;
 				while(ChangedFile.next()){
 					changeLoc += CalChangeLine(ChangedFile.getString(2));
 					changeCnt++;
+					bugCnt += ChangedFile.getString(3).equals("1")?1:0;
 				}
-				bWriter.append(otherMetrics.get(fileId) + "," + changeLoc+ "," + changeCnt + "\n");
+				bWriter.append(otherMetrics.get(fileId) + "," + changeLoc + "," + changeCnt + "," + bugCnt + "\n");
 		}
 		bWriter.flush();
 		bWriter.close();

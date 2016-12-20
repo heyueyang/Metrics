@@ -87,7 +87,7 @@ public class Designate {
 			//get label for every instances
 			while ((line = bReader.readLine()) != null) {
 				//System.out.println(line.split(",")[change_ind] + "     " + (Integer.valueOf(line.split(",")[change_ind])>thres?"TRUE":"FALSE"));
-				list.add(Integer.valueOf(line.split(",")[change_ind])>thres?"TRUE":"FALSE");
+				list.add(Integer.valueOf(line.split(",")[change_ind])>thres?"true":"false");
 			}
 
 		} catch (FileNotFoundException e) {
