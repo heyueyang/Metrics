@@ -126,6 +126,7 @@ public class Designate {
 		//(2)use box to find the threshold 
 		//Arrays.sort(changeLoc);
 		res = Box(list);
+		res = Pareto(list);
 		return res;
 
 	}
@@ -142,6 +143,17 @@ public class Designate {
 		int bottom = changeLoc[bottomInd], top = changeLoc[topInd];
 		//System.out.println(changeLoc.length + ":" + bottomInd + "---" + topInd + "||" + bottom + "---" + top);
 		return (int) (top + 1.5*(top - bottom));
+
+	}
+	
+	private static int Pareto(LinkedList<Integer> list) throws IOException{
+		int[] changeLoc = new int[list.size()];
+		int i = 0;
+		while(i<list.size()){
+			changeLoc[i] = list.get(i++);
+		}
+		Arrays.sort(changeLoc);
+		return changeLoc[(int) (changeLoc.length*0.8)];
 
 	}
 

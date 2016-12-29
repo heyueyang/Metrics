@@ -56,10 +56,11 @@ public class Extraction3 extends Extraction {
 	static String dicDir = "/home/yueyang/data/dic_csv/";
 	static String error_dir = "/home/yueyang/data/error/";
 	static String recoverDir = "/home/yueyang/data/recover_info/";
+	static String project = "";
 	static String[] projects = {"ant", "eclipse", "camel", "itextpdf", "jEdit", "lucene","struts", "liferay","tomcat"};//, "voldemort"
 
 	//static String project = "";
-	static String projectHome = "c";
+	static String projectHome = "/home/yueyang/recover_projects/";
 	
 	public static void main(String[] args) throws Exception {
 		
@@ -116,6 +117,7 @@ public class Extraction3 extends Extraction {
 		currStrings = new HashSet<>();
 		content = new HashMap<>();
 		colMap = new HashMap<>();
+		project = database;
 
 		// �����startId��endId��Ը�����е��ҡ�
 		changeLogInfo();
@@ -127,6 +129,7 @@ public class Extraction3 extends Extraction {
 			String projectHome) throws SQLException, IOException {
 		super(database);
 		setCommitId_fileIds(icf_id);
+		project = database;
 		dictionary = new LinkedHashMap<>();
 		dictionary2 = new LinkedHashMap<>();
 		currStrings = new HashSet<>();
@@ -332,9 +335,13 @@ public class Extraction3 extends Extraction {
 			try{
 				patch = bow.bowP(sBuffer);
 			}catch(Exception e){
-			
-				String error_file_path = error_dir + "/" + list.get(2)
+				//错误处理，将错误截取的字符串输出至文件保存
+				String error_file_dir = error_dir + project + "/";
+				String error_file_path = error_file_dir + list.get(2)
 				+ "_" + list.get(1) + "_" + list.get(0) + "_error.txt";
+				if(!new File(error_file_dir).exists()){
+					new File(error_file_dir).mkdirs();
+				}
 				File errorFile = new File(error_file_path);
 				if(!errorFile.exists()){
 					errorFile.createNewFile();

@@ -16,6 +16,7 @@ import java.util.HashMap;
 public class DataCollect {
 	private static SQLConnect connect = null;
 	private static HashMap<String,String> start_tag = new HashMap<String,String>();
+	private static HashMap<String,String> start_name = new HashMap<String,String>();
 	//private static String end_commit = "0";
 	private static String ProjectDirPath = "/home/yueyang/gitFile/";
 
@@ -23,26 +24,26 @@ public class DataCollect {
 		// TODO Auto-generated method stub
 		File Dir = new File(ProjectDirPath);
 		File[] files = Dir.listFiles();
-		/*start_tag.put("ant", "rel/1.7.0");
-		start_tag.put("eclipse", "R4_4");
-		start_tag.put("camel", "camel-1.6.3");
-		start_tag.put("struts", "STRUTS_2_1_6");
-		start_tag.put("liferay", "6.1.0-rc1");
-		start_tag.put("tomcat", "TOMCAT_8_0_0_RC10");
-		start_tag.put("voldemort", "release-1.9.5-cutoff");
-		start_tag.put("jEdit", "1000");
-		start_tag.put("itextpdf", "itextg-5.4.3");
-		*/
+		start_name.put("ant", "rel/1.7.0");
+		start_name.put("eclipse", "R4_4");
+		start_name.put("camel", "camel-2.16.0");
+		start_name.put("struts", "STRUTS_2_1_6");
+		start_name.put("liferay", "7.0.0-m4");
+		start_name.put("tomcat", "TOMCAT_8_0_0");
+		start_name.put("voldemort", "release-1.9.5-cutoff");
+		start_name.put("itextpdf", "itextg-5.4.3");
+		
+		
 		start_tag.put("ant", "12289");
 		start_tag.put("eclipse", "25513");
 		start_tag.put("camel", "27743");//7662
 		start_tag.put("struts", "2513");
 		start_tag.put("liferay", "24930");//17470
-		start_tag.put("tomcat", "14026");//no tag in master,in trunk13813
+		start_tag.put("tomcat", "14026");//no tag in master,in trunk 13813
 		start_tag.put("voldemort", "3961");//3961
-		start_tag.put("synapse","1821");
+		start_tag.put("synapse","1821");//no tag in master,in trunk
 		start_tag.put("jEdit", "2837");//no tag in git svn2git
-		start_tag.put("itextpdf", "3297");//no tag in master
+		start_tag.put("itextpdf", "3297");
 		start_tag.put("lucene", "2594");// no tag in git svn2git
 		
 		//writeMasterBranchInfo("/home/yueyang/data/project_branch.txt");
@@ -57,7 +58,7 @@ public class DataCollect {
     		System.out.println("------- " + files[i].getName()+ " -------");
     		FileOperation fo = new FileOperation(files[i].getName());
     		fo.CompleteExcute(start_tag.get(files[i].getName()));
-    		
+    		//writeRevisionInfo(start_tag, "/home/yueyang/data/commit_rev.txt");
     	}
 		
 		//CalComplexity();
@@ -101,7 +102,7 @@ public class DataCollect {
 		for( int i =0; i < startTag.size(); i++){
 			String projectName = (String)projectNames[i];
 			FileOperation fo = new FileOperation(projectName);  		
-			bWriter.append(fo.getRevisionInfo(projectName, startTag.get(projectName)));
+			bWriter.append(projectName + "\t" + start_name.get(projectName) + "\t" + fo.getRevisionInfo(projectName, startTag.get(projectName)));
 		}
 			bWriter.flush();
 			bWriter.close();

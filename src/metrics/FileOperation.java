@@ -190,22 +190,29 @@ public class FileOperation {
 				System.out.println(RecentCommitSQl);
 				ResultSet RecentCommit = connect.Excute(RecentCommitSQl);
 				String str = "";
+				int totalCnt = 0, changeCnt = 0;
 				while(RecentCommit.next()){
 					//remove the unchanged files
 					//if(!RecentCommit.getString(6).equals("D"))// 
-					if(FileChange.containsKey(RecentCommit.getString(1)) == true && !RecentCommit.getString(6).equals("D") && (!RecentCommit.getString(3).contains("test") || !RecentCommit.getString(3).contains("Test")))// 
+					if(!RecentCommit.getString(6).equals("D") && (!RecentCommit.getString(3).contains("test") && !RecentCommit.getString(3).contains("Test")))// 
 					{
-						int changeLoc = (FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0;
-						str = RecentCommit.getString(1) + "\t" + RecentCommit.getString(2)+ "\t" + RecentCommit.getString(3) + "\t" + RecentCommit.getString(4) + "\t" 
-					+ changeLoc + "\t" + RecentCommit.getString(5) + "\t" + RecentCommit.getString(6)+ "\t" + RecentCommit.getString(7)+ "\n";
-						bWriter.append(str);
-						OtherMetrics.put(RecentCommit.getString(1), RecentCommit.getString(1) + "," + RecentCommit.getString(2)+ "," + changeLoc);
+						totalCnt++;
+						if(FileChange.containsKey(RecentCommit.getString(1)) == true)
+						{
+							changeCnt++;
+							int changeLoc = (FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0;
+							str = RecentCommit.getString(1) + "\t" + RecentCommit.getString(2)+ "\t" + RecentCommit.getString(3) + "\t" + RecentCommit.getString(4) + "\t" 
+						+ changeLoc + "\t" + RecentCommit.getString(5) + "\t" + RecentCommit.getString(6)+ "\t" + RecentCommit.getString(7)+ "\n";
+							bWriter.append(str);
+							OtherMetrics.put(RecentCommit.getString(1), RecentCommit.getString(1) + "," + RecentCommit.getString(2)+ "," + changeLoc);
+						}
 					}
 					
 				}
 			bWriter.flush();
 			bWriter.close();
 			System.out.println("writed into" + recoverInfoPath);
+			System.out.println(totalCnt + "\t" + changeCnt);
 			getCLocBefore(OtherMetrics, startCommitId, OtherDir + pro + "Others.csv");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block
@@ -433,13 +440,15 @@ public static ArrayList<String> findFiles(String baseDirName, String targetFileN
 		
 		String str = "";
 		try {
+			
+			//String TagID2NameSQl = "select id from tags where name=" + commitName;
+			//ResultSet TagId = connect.Excute(TagID2NameSQl);
 			String RecentCommitSQl = "select rev from scmlog where id=" + commitId;
-			System.out.println(RecentCommitSQl);
+			//System.out.println(RecentCommitSQl);
 			String[] branch = getMasterBranch();
 			ResultSet commit = connect.Excute(RecentCommitSQl);
-			
 			while(commit.next()){
-				str += projectName + "\t" + commitId + "\t" + commit.getString(1) + "\t" + branch[0] + "\t" + branch[1] + "\n";
+				str +=  commitId + "\t" + commit.getString(1) + "\t" + branch[0] + "\t" + branch[1] + "\n";
 			}
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

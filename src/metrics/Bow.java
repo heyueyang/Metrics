@@ -154,7 +154,7 @@ public static void main(String[] args) throws Exception {
 			// 第一块注释区前面的都是源码内容，加入hunkBuffer，但是似乎不需要加这个空格，如果加了，下面的分裂应以一个或多个空格分。
 			hunkBuffer.append(" " + text.substring(0, start));
 			text.delete(0, start); // 将text中处理完的内容删掉
-			
+			/**/
 			start = 0; // 将指针指向text头部。
 			String startOper = new String();
 			if (text.charAt(start) == '/') { // 匹配之前出现的操作符，确定注释区。
