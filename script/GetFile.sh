@@ -21,7 +21,7 @@ echo $recoverPath
 
 cat $infoPath | while read file_id commit_id current_file_path rev changeloc recent_time 
 do
- git reset $rev $current_file_path
+ git reset -q $rev $current_file_path
  git checkout $current_file_path
   
 if test -e $current_file_path;then
