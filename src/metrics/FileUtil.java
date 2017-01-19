@@ -1,8 +1,13 @@
 package metrics;
 
+import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import weka.core.Instances;
 import weka.core.converters.ArffLoader;
@@ -299,6 +304,47 @@ public static boolean WriteArff2CSV(Instances ins,String filePath){
 		return ind;
 	 } 
 
+	public static void Write2TempArff(List<Integer> fileList, Map<Integer, List<Integer>> data) throws IOException{
+		String outPath = "E:\\dataset\\change7.0\\asso\\" + "test.arff";
+		BufferedWriter bWriter = new BufferedWriter(new FileWriter(outPath));
+		//StringBuffer sb = new StringBuffer();
+		bWriter.append("@relation files" + "\n");
+		
+		for(int i = 0 ; i < fileList.size(); i++){
+			String file_id = String.valueOf(fileList.get(i));
+			bWriter.append("@attribute '" + file_id + "' { t}" + "\n");
+		}
+		bWriter.append("@data" + "\n");
+		Set<Integer> commitIds = data.keySet();
+		int[] cnt = new int[fileList.size()];
+		int n = 0;
+		for(Integer commit_id : commitIds){
+			System.out.print(n++ + ":" + "\t");
+			List<Integer> list = data.get(commit_id);
+			for(int j = 0 ; j < list.size(); j++){
+				System.out.print(list.get(j) + "\t");
+			}
+			System.out.println();
+		
+			StringBuffer temp = new StringBuffer();
+			for(int j = 0 ; j < fileList.size(); j++){
+				if(list.contains(fileList.get(j))){
+					temp.append("t"+",");
+					cnt[j]++;
+				}else{
+					temp.append("?"+",");
+				}
+			}
+			bWriter.append(temp.subSequence(0, temp.length()-1)+"\n");
+		}
+			
+			bWriter.flush();
+			bWriter.close();
+			System.out.println("writed into" + outPath);
 	
+			//for(int j = 0 ; j < fileList.size(); j++){
+			//	System.out.println(j+ "," + fileList.get(j) + "," + cnt[j]);
+			//}
+	}
 
 }

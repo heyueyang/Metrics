@@ -197,7 +197,7 @@ public class FileOperation {
 					if(!RecentCommit.getString(6).equals("D") && (!RecentCommit.getString(3).contains("test") && !RecentCommit.getString(3).contains("Test")))// 
 					{
 						totalCnt++;
-						if(FileChange.containsKey(RecentCommit.getString(1)) == true)
+						//if(FileChange.containsKey(RecentCommit.getString(1)) == true)
 						{
 							changeCnt++;
 							int changeLoc = (FileChange.containsKey(RecentCommit.getString(1)))?FileChange.get(RecentCommit.getString(1)):0;

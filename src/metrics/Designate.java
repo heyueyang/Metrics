@@ -125,7 +125,7 @@ public class Designate {
 		//(1)default: use 0 to be the threshold
 		//(2)use box to find the threshold 
 		//Arrays.sort(changeLoc);
-		res = Box(list);
+		//res = Box(list);
 		res = Pareto(list);
 		return res;
 
