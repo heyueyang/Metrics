@@ -9,6 +9,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.sql.SQLException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -71,9 +72,9 @@ public class MergeMetrics {
 
 			Map<List<Integer>, String> network = readNetwork(networkPath);//null;//
 			
-			Map<List<Integer>, String> others = readOthers(othersPath);//null;//
+			Map<List<Integer>, String> others = null;//readOthers(othersPath);//
 			
-			Map<List<Integer>, StringBuffer> bow = readBowFromCSV(bowPath);//null;//
+			Map<List<Integer>, StringBuffer> bow = null;//readBowFromCSV(bowPath);//
 
 			merge(resultPath, complex, network, bow, others);
 		}
@@ -115,15 +116,19 @@ public class MergeMetrics {
 			
 			bw.write(complex.get(list) + ",");
 			//System.out.println(list.get(0) + "_" + list.get(1));
-			
-			if(network.get(list) != null){
-				bw.write(network.get(list) + ",");
-			}else{
-				bw.write(netNullString);
+			if(network != null){
+				if(network.get(list) != null){
+					bw.write(network.get(list) + ",");
+				}else{
+					bw.write(netNullString);
+				}
 			}
 			
-			bw.write(others.get(list) + ",");
-			bw.write(bow.get(list) + ",");
+			
+			if(others != null){
+				bw.write(others.get(list) + ",");
+			}
+			//bw.write(bow.get(list) + ",");
 			bw.write(label.get(list) + "\n");
 			
 			/*if(++cnt%100 == 0){
@@ -231,8 +236,8 @@ public class MergeMetrics {
 		Extraction3 extra = new Extraction3(project, id_commitId_fileIds, projectHome);
 		bow = extra.getContent();
 		attrString.append("," + bow.get(extra.headmap));
-		//System.out.println(bow.get(extra.headmap));
-		//extra.writeContent(bow, bowDir + project + "Bow.txt");
+		//System.out.println("******************" + bow.get(extra.headmap));
+		extra.writeContent(bow, bowDir + project + "Bow.csv");
 		System.out.println("extract bow metrics finished!");
 		return bow;
 	}
@@ -242,7 +247,8 @@ private Map<List<Integer>, StringBuffer> readBowFromCSV(String path) throws Exce
 		if(!new File(path).exists()){
 			System.out.println("bow path:" + path + "not exists!");
 			Map<List<Integer>, StringBuffer> bow = readBowContent(this.projectHome);
-			writeMap(bow,path);
+			
+			//writeMap(bow,path);
 			return bow;
 		}
 		
@@ -340,8 +346,8 @@ public void writeMap( Map<List<Integer>, StringBuffer> bow, String path) throws 
 	FileWriter fw = new FileWriter(file.getAbsoluteFile());
 	BufferedWriter bw = new BufferedWriter(fw);
 	 
-	StringBuffer sBuffer = new StringBuffer();
-	int cnt = 0;
+	//StringBuffer sBuffer = new StringBuffer();
+	//int cnt = 0;
 	Set<List<Integer>> keys = bow.keySet();
 	for (List<Integer> list : keys) {
 		//sBuffer.append(map.get((List<Integer>)list) + "\n");
@@ -352,10 +358,10 @@ public void writeMap( Map<List<Integer>, StringBuffer> bow, String path) throws 
 			sBuffer = new StringBuffer();
 		}*/
 		//System.out.println(bow.get((List<Integer>)list).toString());
-		bw.write( bow.get((List<Integer>)list).toString() + "\n");
+		bw.write(list.toString()+ " : " +bow.get((List<Integer>)list).toString() + "\n");
 	}
 	
-	bw.write(sBuffer.toString());
+	//bw.write(sBuffer.toString());
 	bw.flush();
 	bw.close();
 	System.out.println("result path:" + resultPath + " finished!");

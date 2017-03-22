@@ -56,7 +56,7 @@ public class DataCollect {
     	for(int i = 0;i < files.length; i++){
     		if(!files[i].isDirectory()) continue;
     		System.out.println("------- " + files[i].getName()+ " -------");
-    		FileOperation fo = new FileOperation(files[i].getName());
+    		ExtractMetaData fo = new ExtractMetaData(files[i].getName());
     		fo.CompleteExcute(start_tag.get(files[i].getName()));
     		//writeRevisionInfo(start_tag, "/home/yueyang/data/commit_rev.txt");
     	}
@@ -101,7 +101,7 @@ public class DataCollect {
 		Object[] projectNames = startTag.keySet().toArray();
 		for( int i =0; i < startTag.size(); i++){
 			String projectName = (String)projectNames[i];
-			FileOperation fo = new FileOperation(projectName);  		
+			ExtractMetaData fo = new ExtractMetaData(projectName);  		
 			bWriter.append(projectName + "\t" + start_name.get(projectName) + "\t" + fo.getRevisionInfo(projectName, startTag.get(projectName)));
 		}
 			bWriter.flush();
@@ -129,7 +129,7 @@ public class DataCollect {
     		if(!files[i].isDirectory()) continue;
 	
 			String projectName = files[i].getName();
-			FileOperation fo = new FileOperation(projectName);  
+			ExtractMetaData fo = new ExtractMetaData(projectName);  
 			String[] branch = fo.getMasterBranch();
 			bWriter.append(projectName + "\t" + branch[0] + "\t" + branch[1] + "\n");
 		}

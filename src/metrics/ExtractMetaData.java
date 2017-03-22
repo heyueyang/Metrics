@@ -13,14 +13,14 @@ import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-public class FileOperation {
+public class ExtractMetaData {
 	private static SQLConnect connect = null;
 	private static String InfoDir = "/home/yueyang/data/recover_info/"; 
 	private static String OtherDir = "/home/yueyang/data/others_csv/"; 
 	private static String project = null;
 	private static String MasterBranchId = "0";
 	
-	public FileOperation(String pro) {
+	public ExtractMetaData(String pro) {
 		project = pro;
 		connect = new SQLConnect(pro);
 	}
@@ -211,8 +211,8 @@ public class FileOperation {
 				}
 			bWriter.flush();
 			bWriter.close();
-			System.out.println("writed into" + recoverInfoPath);
-			System.out.println(totalCnt + "\t" + changeCnt);
+			System.out.println("Total file count : " + totalCnt + "\t" + "Changed file count : " + changeCnt);
+			System.out.println("writed changed files into" + recoverInfoPath);
 			getCLocBefore(OtherMetrics, startCommitId, OtherDir + pro + "Others.csv");
 		} catch (Exception e) {
 			// TODO Auto-generated catch block

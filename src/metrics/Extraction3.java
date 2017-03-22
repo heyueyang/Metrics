@@ -141,6 +141,8 @@ public class Extraction3 extends Extraction {
 		headmap.add(-1);
 		StringBuffer head = new StringBuffer("Id,commitId,fileId,");
 		content.put(headmap, head);
+		//content.put(headmap, new StringBuffer("test"));
+		Set<List<Integer>> keys = content.keySet();
 		for (List<Integer> list : id_commitId_fileIds) {
 			if (list.get(0) != -1) {
 				StringBuffer write = new StringBuffer(list.get(0) + ","
@@ -148,7 +150,6 @@ public class Extraction3 extends Extraction {
 				content.put(list, write);
 			}
 		}
-
 		// �����startId��endId��Ը�����е��ҡ�
 		changeLogInfo();
 		sourceInfoAll(projectHome);
