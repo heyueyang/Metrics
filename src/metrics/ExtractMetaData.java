@@ -160,7 +160,7 @@ public class ExtractMetaData {
 								+ " where commit_"
 								+ " and actions.file_id = a.file_id)";*/
 				
-				
+				//查找出startCommitId之前的所有file_id,和他们对应的commit_date最大且commit_id最大的那些commit_id
 				String RecentCommitSQl = "select a.file_id,a.commit_id,a.current_file_path,a.rev,a.commit_date,a.type,a.branch_id "
 						+ "from "
 						+ "(select actions.file_id,actions.commit_id,actions.current_file_path,scmlog.rev,scmlog.commit_date,actions.branch_id,actions.type  "
